@@ -2377,28 +2377,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 //random me quote 
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-  }
-}
-
-async function displayRandomUpdate() {
-  try {
-      const response = await fetch('./updates.txt');
-      const data = await response.text();
-      const lines = data.split('\n').filter(line => line.trim() !== '');
-      shuffleArray(lines);
-      const randomLine = lines[0];
-      document.querySelector('.status-quote').textContent = randomLine;
-  } catch (error) {
-      console.error('Error fetching updates:', error);
-      document.getElementById('update').textContent = 'Failed to load update.';
-  }
-}
-
-displayRandomUpdate();
 
 
 document.addEventListener('pointerdown', (event) => {
@@ -2476,29 +2454,27 @@ function createRain(x, y, rainAttribute) {
 
 
 
-        document.querySelector('.search-box').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                const inputValue = this.value.trim();
+document.querySelector('.search-box').addEventListener('input', function() {
+  const inputValue = this.value.trim();
 
-                if (inputValue === 'catkot') {
-                    window.LastClickedLink = 'web.tel.onl/';
-                    Window.spawnWindow('msedge');
-                } else if (inputValue === 'catkot2') {
-                    window.LastClickedLink = 'y99.in/rw/1813243';
-                    Window.spawnWindow('msedge');
-                }
-                else if (inputValue === 'space') {
-                  window.LastClickedLink = 'middlespot.com/gix';
-                  Window.spawnWindow('msedge');
-              }
-              else if (inputValue === 'voice') {
-                window.LastClickedLink = 'app.gather.town/app/PZXqNDAAW2QQJOyU/Virtus';
-                Window.spawnWindow('msedge');
-            }
-           
-                this.value = ''; // Clear the input field
-            }
-        });
+  if (inputValue === 'tele') {
+      window.LastClickedLink = 'web.tel.onl/';
+      Window.spawnWindow('msedge');
+      this.value = ''; // Clear the input field
+  } else if (inputValue === 'y99') {
+      window.LastClickedLink = 'y99.in/rw/1813243';
+      Window.spawnWindow('msedge');
+      this.value = ''; // Clear the input field
+  } else if (inputValue === 'canvas') {
+      window.LastClickedLink = 'middlespot.com/gix';
+      Window.spawnWindow('msedge');
+      this.value = ''; // Clear the input field
+  } else if (inputValue === 'gather') {
+      window.LastClickedLink = 'app.gather.town/app/PZXqNDAAW2QQJOyU/Virtus';
+      Window.spawnWindow('msedge');
+      this.value = ''; // Clear the input field
+  }
+});
 
 
 
@@ -2751,7 +2727,7 @@ function createRain(x, y, rainAttribute) {
 
         document.addEventListener('DOMContentLoaded', function() {
           Swal.fire({
-            title: '<span class="shaking-text">No need to waste money on courses,</span><br><span class="shaking-text">let AI help you understand everything</span><br><span class="shaking-text">and get A+</span>',
+            title: '<span class="shaking-text">No need to waste money 💸 on courses,</span><br><span class="shaking-text">let AI help you understand everything</span><br><span class="shaking-text">and get A+</span>',
             showConfirmButton: true,
             confirmButtonText: 'Close',
             allowOutsideClick: true,
