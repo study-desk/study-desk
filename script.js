@@ -2453,7 +2453,7 @@ function createRain(x, y, rainAttribute) {
 
 
 
-
+//codes
 document.querySelector('.search-box').addEventListener('input', function() {
   const inputValue = this.value.trim();
 
