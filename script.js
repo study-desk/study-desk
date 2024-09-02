@@ -2498,10 +2498,36 @@ document.querySelector('.search-box').addEventListener('input', function() {
       window.LastClickedLink = 'app.gather.town/app/PZXqNDAAW2QQJOyU/Virtus';
       Window.spawnWindow('msedge');
       this.value = ''; // Clear the input field
+  } else if (inputValue === 'wow') {
+   wow()
+      this.value = ''; // Clear the input field
   }
+
+
+
+
+  
 });
 
 
+
+//ai chat
+  function wow() {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.text = `
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/66d4cbc3ea492f34bc0c8481/1i6njntre';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+    })();
+  `;
+  document.head.appendChild(script);
+}
 
 
         //timer
