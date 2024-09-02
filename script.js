@@ -2778,7 +2778,7 @@ document.querySelector('.search-box').addEventListener('input', function() {
 
         document.addEventListener('DOMContentLoaded', function() {
           Swal.fire({
-            title: '<span class="shaking-text">No need to waste money 💸 on courses,</span><br><span class="shaking-text">let AI help you understand everything</span><br><span class="shaking-text">and get A+</span>',
+            title: '<span class="shaking-text">No need to waste money 💸 on courses,</span><br><span class="shaking-text">let AI 🤖 help you understand everything</span><br><span class="shaking-text">and get A+ 👩‍🎓</span>',
             showConfirmButton: true,
             confirmButtonText: 'Close',
             allowOutsideClick: true,
@@ -2802,3 +2802,21 @@ document.querySelector('.search-box').addEventListener('input', function() {
             }
           });
         });
+
+
+//perserve title 
+document.addEventListener('DOMContentLoaded', () => {
+    const originalTitle = document.title;
+    
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (document.title !== originalTitle) {
+                document.title = originalTitle;
+            }
+        });
+    });
+    
+    observer.observe(document.querySelector('title'), { childList: true });
+});
+
+
