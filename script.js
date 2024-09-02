@@ -26,6 +26,14 @@ $(() => {
           action: `Window.spawnWindow('msedge')`,
         }),
 
+           new DesktopIcon({
+          id: "aitutor",
+          icon: `https://img.icons8.com/?size=100&id=X7Ps4LtblU6u&format=png&color=000000`,
+          url: "mymap.ai/mindmap",
+          text: "free AI Mindmaps",
+          action: `Window.spawnWindow('msedge')`,
+        }),
+
             new DesktopIcon({
           id: "documator",
           icon: `https://img.icons8.com/?size=100&id=d2H6kHCiPSIg&format=png&color=000000`,
