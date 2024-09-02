@@ -28,7 +28,7 @@ $(() => {
 
             new DesktopIcon({
           id: "documator",
-          icon: `https://icons8.com/icon/d2H6kHCiPSIg/pdf`,
+          icon: `https://img.icons8.com/?size=100&id=d2H6kHCiPSIg&format=png&color=000000`,
           url: "documator.cc/",
           text: "PDF summary",
           action: `Window.spawnWindow('msedge')`,
@@ -36,7 +36,7 @@ $(() => {
 
               new DesktopIcon({
           id: "pdflex",
-          icon: `https://img.icons8.com/?size=100&id=undefined&format=png&color=000000`,
+          icon: `https://img.icons8.com/?size=100&id=SPJrDfRcvJLu&format=png&color=000000`,
           url: "pdfflex.com/ai-chat-with-pdf?",
           text: "PDF tools",
           action: `Window.spawnWindow('msedge')`,
