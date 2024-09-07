@@ -42,6 +42,95 @@
 
 
 
+<!-- bitmoji -->
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <script>
+        // Create the style element and append it to the head
+        const style = document.createElement('style');
+        style.textContent = `
+            body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+            #bitmoji { position: absolute; width: 100px; height: auto; cursor: move; user-select: none; -webkit-user-drag: none; }
+            .tippy-box[data-theme~='gradient'] { background: linear-gradient(to right, var(--color1), var(--color2)); color: white; }
+            .tippy-box[data-theme~='gradient'][data-placement^='top'] > .tippy-arrow::before { border-top-color: var(--color1); }
+            #settings-menu { display: none; position: fixed; right: 20px; top: 20px; background: white; border: 1px solid #ccc; padding: 10px; border-radius: 5px; max-height: 80vh; overflow-y: auto; }
+            .settings-group { margin-bottom: 10px; }
+            .settings-group label { display: block; margin-bottom: 5px; }
+            .settings-group input, .settings-group select { width: 100%; margin-bottom: 5px; }
+            .bitmoji-controls { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); display: none; }
+            .bitmoji-controls button { margin: 0 5px; }
+            #score {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.25);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                font-weight: bold;
+                color: #333;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            #score:hover {
+                transform: scale(1.1);
+            }
+            .level-up-text { position: absolute; font-size: 24px; font-weight: bold; color: #FFD700; animation: fallDown 2s linear; }
+            @keyframes fallDown {
+                0% { transform: translateY(-100vh); opacity: 1; }
+                100% { transform: translateY(100vh); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Create the score element
+        const score = document.createElement('div');
+        score.id = 'score';
+        score.textContent = '⭐ 0';
+        document.body.appendChild(score);
+
+        // Create the bitmoji image element
+        const bitmoji = document.createElement('img');
+        bitmoji.id = 'bitmoji';
+        bitmoji.src = 'https://sdk.bitmoji.com/render/panel/10220686-103659027558_3-s5-v1.png?transparent=1&palette=1';
+        bitmoji.alt = 'Bitmoji';
+        document.body.appendChild(bitmoji);
+
+        // Create the bitmoji controls
+        const bitmojiControls = document.createElement('div');
+        bitmojiControls.className = 'bitmoji-controls';
+        const closeBtn = document.createElement('button');
+        closeBtn.id = 'closeBtn';
+        closeBtn.textContent = 'X';
+        const minimizeBtn = document.createElement('button');
+        minimizeBtn.id = 'minimizeBtn';
+        minimizeBtn.textContent = '_';
+        const presetBtn = document.createElement('button');
+        presetBtn.id = 'presetBtn';
+        presetBtn.textContent = 'Presets';
+        bitmojiControls.appendChild(closeBtn);
+        bitmojiControls.appendChild(minimizeBtn);
+        bitmojiControls.appendChild(presetBtn);
+        document.body.appendChild(bitmojiControls);
+
+        // Create the settings menu
+        const settingsMenu = document.createElement('div');
+        settingsMenu.id = 'settings-menu';
+        document.body.appendChild(settingsMenu);
+
+        // Add event listeners or other JavaScript logic here
+    </script>
+
 
 
 
