@@ -2820,3 +2820,415 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+
+//bitmoji character
+
+const bitmoji = document.getElementById('bitmoji');
+const settingsMenu = document.getElementById('settings-menu');
+const controls = document.querySelector('.bitmoji-controls');
+const closeBtn = document.getElementById('closeBtn');
+const minimizeBtn = document.getElementById('minimizeBtn');
+const presetBtn = document.getElementById('presetBtn');
+const scoreElement = document.getElementById('score');
+let isDragging = false, isOnGround = true, velocityX = 0, velocityY = 0, rotationVelocity = 0, rotation = 0;
+let speechBubble, lastSpeechTime = 0, isMinimized = false;
+const colorThief = new ColorThief();
+
+let bitmojiSettings = {
+    avatarId: "103659027558_3-s5",
+    walkingUrls: ["https://sdk.bitmoji.com/render/panel/10117710-%s-v1.png?transparent=1&palette=1"],
+    bouncingUrls: ["https://sdk.bitmoji.com/render/panel/10224587-%s-v1.png?transparent=1&palette=1"],
+    stoppingUrls: ["https://sdk.bitmoji.com/render/panel/20036995-%s-v1.png?transparent=1&palette=1"],
+    minimizedUrl: "https://sdk.bitmoji.com/render/panel/20047544-%s-v1.png?transparent=1&palette=1",
+    randomStopChance: 0.9,
+    randomJumpChance: 0.0005,
+    speechBubbleDuration: 3000,
+    speechBubbleInterval: 30000,
+    movingSpeechBubbleChance: 0.0005,
+    walkingDelay: 500,
+    bouncingDelay: 500,
+    stoppingDelay: 500
+};
+
+const presets = {
+    calm: { randomStopChance: 0.9, randomJumpChance: 0.0005, movingSpeechBubbleChance: 0.0005 },
+    normal: { randomStopChance: 0.8, randomJumpChance: 0.001, movingSpeechBubbleChance: 0.001 },
+    crazy: { randomStopChance: 0.6, randomJumpChance: 0.005, movingSpeechBubbleChance: 0.005 },
+    hyperactive: { randomStopChance: 0.3, randomJumpChance: 0.01, movingSpeechBubbleChance: 0.01 }
+};
+
+let score = parseInt(localStorage.getItem('bitmojiScore')) || 0;
+updateScoreDisplay();
+
+function updateScoreDisplay() {
+    scoreElement.innerHTML = `⭐ ${score}`;
+}
+
+function incrementScore() {
+    score++;
+    localStorage.setItem('bitmojiScore', score);
+    updateScoreDisplay();
+    updateBitmojiLevel();
+}
+
+function updateBitmojiLevel() {
+    let prevLevel = Math.floor((score - 1) / 10) + 1;
+    let currentLevel = Math.floor(score / 10) + 1;
+    let speechBubbles, imageUrl;
+
+    if (currentLevel > prevLevel) {
+        showLevelUpAnimation();
+    }
+
+    if (score < 10) {
+        speechBubbles = ["Just starting out!", "Let's go!"];
+        imageUrl = "https://sdk.bitmoji.com/render/panel/10220686-%s-v1.png?transparent=1&palette=1";
+    } else if (score < 50) {
+        speechBubbles = ["Getting better!", "Keep it up!"];
+        imageUrl = "https://sdk.bitmoji.com/render/panel/10224587-%s-v1.png?transparent=1&palette=1";
+    } else if (score < 100) {
+        speechBubbles = ["You're doing great!", "Awesome progress!"];
+        imageUrl = "https://sdk.bitmoji.com/render/panel/20036995-%s-v1.png?transparent=1&palette=1";
+    } else {
+        speechBubbles = ["You're a master!", "Incredible job!"];
+        imageUrl = "https://sdk.bitmoji.com/render/panel/20047544-%s-v1.png?transparent=1&palette=1";
+    }
+
+    bitmoji.src = imageUrl.replace('%s', bitmojiSettings.avatarId);
+    bitmojiSettings.walkingUrls = [imageUrl];
+    bitmojiSettings.bouncingUrls = [imageUrl];
+    bitmojiSettings.stoppingUrls = [imageUrl];
+
+    showSpeechBubble(speechBubbles[Math.floor(Math.random() * speechBubbles.length)]);
+}
+
+function showLevelUpAnimation() {
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
+
+    for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+            const text = document.createElement('div');
+            text.textContent = 'LEVEL UP';
+            text.className = 'level-up-text';
+            text.style.left = `${Math.random() * 100}vw`;
+            document.body.appendChild(text);
+            setTimeout(() => text.remove(), 2000);
+        }, i * 100);
+    }
+}
+
+function updateBitmojiPosition(x, y) {
+    bitmoji.style.left = `${x}px`;
+    bitmoji.style.top = `${y}px`;
+    controls.style.left = `${x + 50}px`;
+    controls.style.top = `${y - 30}px`;
+    if (speechBubble && speechBubble.state.isVisible) {
+        speechBubble.setProps({ getReferenceClientRect: () => bitmoji.getBoundingClientRect() });
+    }
+}
+
+function updateBitmojiRotation() {
+    bitmoji.style.transform = `rotate(${rotation}deg)`;
+}
+
+let lastAnimationTime = 0;
+function animate(currentTime) {
+    if (!isDragging && !isMinimized) {
+        let x = parseFloat(bitmoji.style.left) || 0;
+        let y = parseFloat(bitmoji.style.top) || 0;
+
+        if (!isOnGround) {
+            velocityY += 0.5;
+            y += velocityY;
+            if (y + bitmoji.height > window.innerHeight) {
+                y = window.innerHeight - bitmoji.height;
+                isOnGround = true;
+                velocityY = 0;
+                velocityX *= 0.8;
+                changeBitmojiUrl(bitmojiSettings.bouncingUrls, bitmojiSettings.bouncingDelay);
+            }
+        }
+
+        x += velocityX;
+        rotation += rotationVelocity;
+
+        if (x < 0 || x + bitmoji.width > window.innerWidth) {
+            velocityX *= -0.8;
+            x = Math.max(0, Math.min(x, window.innerWidth - bitmoji.width));
+        }
+
+        if (isOnGround) {
+            rotation = 0;
+            rotationVelocity = 0;
+            if (Math.abs(velocityX) < 0.1) {
+                velocityX = 0;
+                if (Math.random() < bitmojiSettings.randomStopChance) {
+                    changeBitmojiUrl(bitmojiSettings.stoppingUrls, bitmojiSettings.stoppingDelay);
+                }
+            } else {
+                changeBitmojiUrl(bitmojiSettings.walkingUrls, bitmojiSettings.walkingDelay);
+                if (Math.random() < bitmojiSettings.movingSpeechBubbleChance) {
+                    showSpeechBubble();
+                }
+            }
+        } else {
+            rotationVelocity += velocityX * 0.01;
+        }
+
+        if (Math.random() < bitmojiSettings.randomJumpChance) {
+            velocityX = Math.random() * 10 - 5;
+            velocityY = -10;
+            isOnGround = false;
+        }
+
+        updateBitmojiPosition(x, y);
+        updateBitmojiRotation();
+    }
+
+    requestAnimationFrame(animate);
+}
+
+function showSpeechBubble(message) {
+    const currentTime = Date.now();
+    if (currentTime - lastSpeechTime < bitmojiSettings.speechBubbleInterval) return;
+
+    lastSpeechTime = currentTime;
+    if (!message) {
+        const messages = ["Hello there!", "Nice to meet you!", "How's it going?", "Beautiful day, isn't it?", "I love physics!"];
+        message = messages[Math.floor(Math.random() * messages.length)];
+    }
+    
+    if (speechBubble) {
+        speechBubble.setContent(message);
+        speechBubble.show();
+    } else {
+        speechBubble = tippy(bitmoji, {
+            content: message,
+            placement: 'top',
+            theme: 'gradient',
+            showOnCreate: true,
+            duration: [300, 1000],
+            hideOnClick: false,
+            trigger: 'manual'
+        });
+    }
+
+    setTimeout(() => {
+        if (speechBubble) speechBubble.hide();
+    }, bitmojiSettings.speechBubbleDuration);
+
+    updateGradientColors();
+}
+
+function updateGradientColors() {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.src = bitmoji.src;
+    img.onload = function() {
+        const colors = colorThief.getPalette(img, 2);
+        document.documentElement.style.setProperty('--color1', `rgb(${colors[0].join(',')})`);
+        document.documentElement.style.setProperty('--color2', `rgb(${colors[1].join(',')})`);
+    };
+}
+
+function changeBitmojiUrl(urlArray, delay) {
+    const currentTime = Date.now();
+    if (currentTime - lastAnimationTime < delay) return;
+    lastAnimationTime = currentTime;
+
+    const url = urlArray[Math.floor(Math.random() * urlArray.length)];
+    bitmoji.src = url.replace('%s', bitmojiSettings.avatarId);
+}
+
+bitmoji.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    isOnGround = false;
+    if (speechBubble) speechBubble.hide();
+    bitmoji.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        updateBitmojiPosition(e.clientX - bitmoji.width / 2, e.clientY - bitmoji.height / 2);
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    if (isDragging) {
+        isDragging = false;
+        bitmoji.style.cursor = 'grab';
+        if (!isMinimized) {
+            velocityX = Math.random() * 10 - 5;
+            velocityY = -10;
+            rotationVelocity = Math.random() * 10 - 5;
+        }
+        incrementScore();
+    }
+});
+
+bitmoji.addEventListener('mouseover', () => {
+    controls.style.display = 'block';
+    velocityX = 0;
+    velocityY = 0;
+    rotationVelocity = 0;
+});
+
+bitmoji.addEventListener('mouseout', (e) => {
+    if (!e.relatedTarget || !controls.contains(e.relatedTarget)) {
+        controls.style.display = 'none';
+    }
+});
+
+controls.addEventListener('mouseover', () => {
+    controls.style.display = 'block';
+});
+
+controls.addEventListener('mouseout', (e) => {
+    if (!e.relatedTarget || e.relatedTarget !== bitmoji) {
+        controls.style.display = 'none';
+    }
+});
+
+closeBtn.addEventListener('click', () => {
+    bitmoji.style.display = 'none';
+    controls.style.display = 'none';
+});
+
+minimizeBtn.addEventListener('click', () => {
+    isMinimized = !isMinimized;
+    if (isMinimized) {
+        bitmoji.src = bitmojiSettings.minimizedUrl.replace('%s', bitmojiSettings.avatarId);
+        velocityX = 0;
+        velocityY = 0;
+        rotationVelocity = 0;
+    } else {
+        changeBitmojiUrl(bitmojiSettings.walkingUrls, bitmojiSettings.walkingDelay);
+    }
+});
+
+presetBtn.addEventListener('click', () => {
+    const preset = prompt("Enter preset (calm, normal, crazy, hyperactive):");
+    if (presets[preset]) {
+        Object.assign(bitmojiSettings, presets[preset]);
+    }
+});
+
+bitmoji.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    const password = prompt("Enter password to access settings:");
+    if (password === "ahmed") {
+        showSettingsMenu();
+    } else {
+        alert("Incorrect password");
+    }
+});
+
+scoreElement.addEventListener('click', () => {
+    incrementScore();
+});
+
+function showSettingsMenu() {
+    settingsMenu.style.display = 'block';
+    settingsMenu.innerHTML = `
+        <div class="settings-group">
+            <label>Avatar ID:</label>
+            <input type="text" value="${bitmojiSettings.avatarId}" onchange="updateSetting('avatarId', this.value)">
+        </div>
+        ${createUrlInputs('Walking URLs', 'walkingUrls')}
+        ${createUrlInputs('Bouncing URLs', 'bouncingUrls')}
+        ${createUrlInputs('Stopping URLs', 'stoppingUrls')}
+        <div class="settings-group">
+            <label>Minimized URL:</label>
+            <input type="text" value="${bitmojiSettings.minimizedUrl}" onchange="updateSetting('minimizedUrl', this.value)">
+        </div>
+        <div class="settings-group">
+            <label>Random Stop Chance:</label>
+            <input type="number" step="0.01" min="0" max="1" value="${bitmojiSettings.randomStopChance}" onchange="updateSetting('randomStopChance', parseFloat(this.value))">
+        </div>
+        <div class="settings-group">
+            <label>Random Jump Chance:</label>
+            <input type="number" step="0.001" min="0" max="1" value="${bitmojiSettings.randomJumpChance}" onchange="updateSetting('randomJumpChance', parseFloat(this.value))">
+        </div>
+        <div class="settings-group">
+            <label>Speech Bubble Duration (ms):</label>
+            <input type="number" step="100" min="0" value="${bitmojiSettings.speechBubbleDuration}" onchange="updateSetting('speechBubbleDuration', parseInt(this.value))">
+        </div>
+        <div class="settings-group">
+            <label>Speech Bubble Interval (ms):</label>
+            <input type="number" step="1000" min="0" value="${bitmojiSettings.speechBubbleInterval}" onchange="updateSetting('speechBubbleInterval', parseInt(this.value))">
+        </div>
+        <div class="settings-group">
+            <label>Moving Speech Bubble Chance:</label>
+            <input type="number" step="0.001" min="0" max="1" value="${bitmojiSettings.movingSpeechBubbleChance}" onchange="updateSetting('movingSpeechBubbleChance', parseFloat(this.value))">
+        </div>
+        <div class="settings-group">
+            <label>Walking Delay (ms):</label>
+            <input type="number" step="100" min="0" value="${bitmojiSettings.walkingDelay}" onchange="updateSetting('walkingDelay', parseInt(this.value))">
+        </div>
+        <div class="settings-group">
+            <label>Bouncing Delay (ms):</label>
+            <input type="number" step="100" min="0" value="${bitmojiSettings.bouncingDelay}" onchange="updateSetting('bouncingDelay', parseInt(this.value))">
+        </div>
+        <div class="settings-group">
+            <label>Stopping Delay (ms):</label>
+            <input type="number" step="100" min="0" value="${bitmojiSettings.stoppingDelay}" onchange="updateSetting('stoppingDelay', parseInt(this.value))">
+        </div>
+        <button onclick="generateCode()">Generate Code</button>
+    `;
+}
+
+function createUrlInputs(label, settingKey) {
+    const urls = bitmojiSettings[settingKey];
+    let html = `<div class="settings-group"><label>${label}:</label>`;
+    urls.forEach((url, index) => {
+        html += `<input type="text" value="${url}" onchange="updateUrlSetting('${settingKey}', ${index}, this.value)">`;
+    });
+    html += `<button onclick="addUrl('${settingKey}')">Add URL</button></div>`;
+    return html;
+}
+
+function updateSetting(setting, value) {
+    bitmojiSettings[setting] = value;
+    if (setting === 'avatarId') {
+        changeBitmojiUrl(bitmojiSettings.walkingUrls, bitmojiSettings.walkingDelay);
+    }
+}
+
+function updateUrlSetting(settingKey, index, value) {
+    bitmojiSettings[settingKey][index] = value;
+}
+
+function addUrl(settingKey) {
+    bitmojiSettings[settingKey].push("");
+    showSettingsMenu();
+}
+
+function generateCode() {
+    const code = `let bitmojiSettings = ${JSON.stringify(bitmojiSettings, null, 2)};`;
+    const blob = new Blob([code], {type: 'text/javascript'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bitmojiSettings.js';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+document.addEventListener('click', (e) => {
+    if (e.target !== settingsMenu && !settingsMenu.contains(e.target) && e.target !== bitmoji) {
+        settingsMenu.style.display = 'none';
+    }
+});
+
+animate();
+updateGradientColors();
+updateBitmojiLevel();
+
+
+
+
